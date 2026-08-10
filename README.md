@@ -31,7 +31,7 @@ ctest --test-dir build --output-on-failure
 | src/main.cpp           | thin application entry point                |
 | tests/                 | GoogleTest suite                            |
 | viz/                   | visualization scripts (Python later)        |
-| .github/workflows/     | CI (added in a later step)                  |
+| .github/workflows/     | build + test on every push                  |
 
 ## Design Decisions
 

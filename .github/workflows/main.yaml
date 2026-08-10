@@ -17,17 +17,17 @@ jobs:
       - name: Install geospatial libraries
         run: sudo apt-get update && sudo apt-get install -y libproj-dev libgeos-dev libgdal-dev
 
-      # Step 2: Configure the project using CMake
+      # Step 3: Configure the project using CMake
       # Creates the build directory and generates the build system
       - name: Configure CMake
         run: cmake -B ${{ github.workspace }}/build
 
-      # Step 3: Build the project
+      # Step 4: Build the project
       # Compiles the source files into executables/libraries
       - name: Build project
         run: cmake --build ${{ github.workspace }}/build --parallel
 
-      # Step 4: Run tests using CTest
+      # Step 5: Run tests using CTest
       # Executes unit tests and outputs details on failures
       - name: Run CTest
         working-directory: ${{ github.workspace }}/build

@@ -10,6 +10,11 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Emit build/compile_commands.json so editor tooling (IntelliSense, clangd,
+# clang-tidy) sees the exact compiler flags -- including dependency include
+# dirs like GDAL's -- instead of guessing.
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Pick a sensible default build type for single-config generators.
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)

@@ -2,7 +2,7 @@
 
 #include <proj.h>
 #include <geos_c.h>
-#include <gdal/gdal.h>
+#include <gdal.h>
 
 namespace penguin_fence {
 
@@ -19,7 +19,7 @@ std::string geos_version() {
 }
 
 std::string gdal_version() {
-    const char* versionNum = GDALVersionInfo("VERSION_NUM");
-    return versionNum;
+    const char* release = GDALVersionInfo("RELEASE_NAME");
+    return release;
 }
 }  // namespace penguin_fence
