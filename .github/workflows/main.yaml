@@ -13,6 +13,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Step 2: Get required geospatial libraries
+      - name: Install geospatial libraries
+        run: sudo apt-get update && sudo apt-get install -y libproj-dev libgeos-dev libgdal-dev
+
       # Step 2: Configure the project using CMake
       # Creates the build directory and generates the build system
       - name: Configure CMake

@@ -6,7 +6,14 @@ The full algorithm and verification plan live in **[docs/TECH_SPEC.md](docs/TECH
 
 ## Build & test
 
-CMake ≥ 3.24 and a C++20 compiler.
+Requires CMake ≥ 3.24 and a C++20 compiler.
+
+Requires `libproj-dev`, `libgeos-dev`, and `libgdal-dev`:
+```bash
+sudo apt-get update && sudo apt-get install -y libproj-dev libgeos-dev libgdal-dev
+```
+
+To build:
 
 ```bash
 cmake -S . -B build
