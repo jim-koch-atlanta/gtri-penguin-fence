@@ -1,0 +1,30 @@
+name: CMake CI
+
+# Trigger the workflow on every push (any branch)
+on: push
+
+jobs:
+  build-and-test:
+    # Use the latest Ubuntu runner provided by GitHub
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Fetch the repository source code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Configure the project using CMake
+      # Creates the build directory and generates the build system
+      - name: Configure CMake
+        run: cmake -B ${{ github.workspace }}/build
+
+      # Step 3: Build the project
+      # Compiles the source files into executables/libraries
+      - name: Build project
+        run: cmake --build ${{ github.workspace }}/build --parallel
+
+      # Step 4: Run tests using CTest
+      # Executes unit tests and outputs details on failures
+      - name: Run CTest
+        working-directory: ${{ github.workspace }}/build
+        run: ctest --output-on-failure
