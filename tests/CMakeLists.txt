@@ -14,7 +14,8 @@ set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 add_executable(penguin_fence_tests
-    smoke_test.cpp)
+    smoke_test.cpp
+    version_test.cpp)
 
 target_link_libraries(penguin_fence_tests
     PRIVATE
