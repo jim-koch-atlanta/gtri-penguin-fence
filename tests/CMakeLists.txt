@@ -17,7 +17,8 @@ add_executable(penguin_fence_tests
     smoke_test.cpp
     version_test.cpp
     parser_test.cpp
-    centroid_test.cpp)
+    centroid_test.cpp
+    projection_test.cpp)
 
 target_link_libraries(penguin_fence_tests
     PRIVATE

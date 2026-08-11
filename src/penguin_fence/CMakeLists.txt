@@ -20,6 +20,7 @@ FetchContent_MakeAvailable(nlohmann_json)
 add_library(penguin_fence
     centroid.cpp
     parser.cpp
+    projection.cpp
     version.cpp)
 
 # Public API headers live in the top-level include/ tree, exposed to
@@ -30,8 +31,12 @@ target_include_directories(penguin_fence PUBLIC
 target_link_libraries(penguin_fence
     PRIVATE
         penguin_fence_warnings
-        PROJ::proj
         GEOS::geos_c
         GDAL::GDAL
         nlohmann_json::nlohmann_json
+)
+
+target_link_libraries(penguin_fence
+    PUBLIC
+        PROJ::proj
 )

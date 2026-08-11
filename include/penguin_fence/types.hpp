@@ -19,4 +19,9 @@ struct Point3D {
     double z;
 };
 
+struct Point2D {
+    double easting;
+    double northing;
+};
+
 }
