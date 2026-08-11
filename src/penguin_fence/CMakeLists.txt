@@ -5,8 +5,20 @@ find_package(PROJ REQUIRED)
 find_package(GEOS REQUIRED)
 find_package(GDAL REQUIRED)
 
+include(FetchContent)
+
+# Fetch nlohmann/json.hpp for parsing of mission data.
+FetchContent_Declare(
+    nlohmann_json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.12.0
+)
+
+FetchContent_MakeAvailable(nlohmann_json)
+
 # --- Core library: all production geofence logic lands here ---
 add_library(penguin_fence
+    parser.cpp
     version.cpp)
 
 # Public API headers live in the top-level include/ tree, exposed to
@@ -19,4 +31,6 @@ target_link_libraries(penguin_fence
         penguin_fence_warnings
         PROJ::proj
         GEOS::geos_c
-        GDAL::GDAL)
+        GDAL::GDAL
+        nlohmann_json::nlohmann_json
+)

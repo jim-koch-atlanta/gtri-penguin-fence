@@ -15,7 +15,8 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(penguin_fence_tests
     smoke_test.cpp
-    version_test.cpp)
+    version_test.cpp
+    parser_test.cpp)
 
 target_link_libraries(penguin_fence_tests
     PRIVATE
