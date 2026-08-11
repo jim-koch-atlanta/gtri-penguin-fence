@@ -19,6 +19,7 @@ FetchContent_MakeAvailable(nlohmann_json)
 # --- Core library: all production geofence logic lands here ---
 add_library(penguin_fence
     centroid.cpp
+    geofence.cpp
     parser.cpp
     projection.cpp
     version.cpp)
@@ -31,12 +32,12 @@ target_include_directories(penguin_fence PUBLIC
 target_link_libraries(penguin_fence
     PRIVATE
         penguin_fence_warnings
-        GEOS::geos_c
         GDAL::GDAL
         nlohmann_json::nlohmann_json
 )
 
 target_link_libraries(penguin_fence
     PUBLIC
+        GEOS::geos_c
         PROJ::proj
 )
