@@ -43,6 +43,7 @@ LatLon calculateCentroid(const std::vector<LatLon>& latLons) {
     constexpr double kMinCentroidNorm = 1e-9;
     double norm = std::sqrt(x_avg * x_avg + y_avg * y_avg + z_avg * z_avg);
     if (norm < kMinCentroidNorm) {
+        // TODO: Switch from exception to graceful failure.
         throw std::invalid_argument(
             "spherical centroid undefined: input points are balanced "
             "symmetrically about the sphere's center (mean vector ~0)");
