@@ -20,6 +20,15 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
 endif()
 
+# Optional AddressSanitizer + UndefinedBehaviorSanitizer build. Configure a
+# separate dir with -DPENGUIN_FENCE_SANITIZE=ON (pair with -DCMAKE_BUILD_TYPE=Debug
+# for clean traces). Applied globally so fetched deps are instrumented too.
+option(PENGUIN_FENCE_SANITIZE "Build with ASan + UBSan" OFF)
+if(PENGUIN_FENCE_SANITIZE)
+    add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address,undefined)
+endif()
+
 # INTERFACE target that is applied to OUR code only (never to fetched dependencies like GoogleTest).
 add_library(penguin_fence_warnings INTERFACE)
 target_compile_options(penguin_fence_warnings INTERFACE -Wall -Wextra)

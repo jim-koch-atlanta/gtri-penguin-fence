@@ -7,9 +7,9 @@
 #include <variant>
 #include <vector>
 
-#include "penguin_fence/latlon.hpp"
 #include "penguin_fence/mission.hpp"
 #include "penguin_fence/parser.hpp"
+#include "penguin_fence/types.hpp"
 
 // INPUT FORMAT ASSUMPTION:
 // These tests assume parsePoint accepts one point as

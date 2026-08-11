@@ -1,6 +1,6 @@
-#include "penguin_fence/latlon.hpp"
 #include "penguin_fence/mission.hpp"
 #include "penguin_fence/parser.hpp"
+#include "penguin_fence/types.hpp"
 
 #include <cmath>
 #include <filesystem>

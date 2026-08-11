@@ -5,8 +5,8 @@
 #include <string_view>
 #include <variant>
 
-#include "latlon.hpp"
 #include "mission.hpp"
+#include "types.hpp"
 
 namespace penguin_fence {
 

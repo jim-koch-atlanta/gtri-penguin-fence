@@ -18,6 +18,7 @@ FetchContent_MakeAvailable(nlohmann_json)
 
 # --- Core library: all production geofence logic lands here ---
 add_library(penguin_fence
+    centroid.cpp
     parser.cpp
     version.cpp)
 

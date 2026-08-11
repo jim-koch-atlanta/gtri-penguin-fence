@@ -1,6 +1,6 @@
 #pragma once
 
-#include "latlon.hpp"
+#include "types.hpp"
 
 #include <vector>
 

@@ -10,4 +10,13 @@ struct LatLon {
     double lon;
 };
 
+/**
+ * A 3D Cartesian point. Signed decimal values.
+ */
+struct Point3D {
+    double x;
+    double y;
+    double z;
+};
+
 }
