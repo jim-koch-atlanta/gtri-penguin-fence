@@ -119,4 +119,40 @@ bool Geofence::contains(const LatLon& point) {
     return result == 1;
 }
 
+// A ring's coordinates, inverse-projected to WGS84.
+std::vector<LatLon> Geofence::ringToLatLon(const GEOSGeometry* ring) {
+    const GEOSCoordSequence* seq = GEOSGeom_getCoordSeq_r(ctx.get(), ring);
+    unsigned size = 0;
+    GEOSCoordSeq_getSize_r(ctx.get(), seq, &size);
+
+    std::vector<LatLon> out;
+    out.reserve(size);
+    for (unsigned i = 0; i < size; ++i) {
+        double x = 0, y = 0;
+        GEOSCoordSeq_getXY_r(ctx.get(), seq, i, &x, &y);
+        out.push_back(proj.eastingNorthingToLatLon(Point2D{ .easting = x, .northing = y }));
+    }
+    return out;
+}
+
+// A single polygon's boundary as WGS84 points.
+std::vector<LatLon> Geofence::polygonToLatLon(const GEOSGeometry* poly) {
+    if (GEOSGeomTypeId_r(ctx.get(),poly) != GEOS_POLYGON) {
+        // TODO: Support disjoint pieces and polygons with holes.
+        throw std::runtime_error("Conversion to WGS84 points currently only supports a single polygon with no holes.");
+    }
+
+    const GEOSGeometry* shell = GEOSGetExteriorRing_r(ctx.get(), poly);
+    return ringToLatLon(shell);
+}
+
+GeofenceAsLatLonPoints Geofence::asLatLonPoints() {
+    return {
+        .launchPointFence = polygonToLatLon(launchBuffer.get()),
+        .ingressRouteFence = polygonToLatLon(ingressBuffer.get()),
+        .regionOfInterestFence = polygonToLatLon(roiBuffer.get()),
+        .mergedFence = polygonToLatLon(fence.get()),
+    };
+}
+
 }  // namespace penguin_fence

@@ -27,6 +27,14 @@ struct GeomDeleter {
 using GeosContextPtr = std::unique_ptr<std::remove_pointer_t<GEOSContextHandle_t>, GeosContextDeleter>;
 using GeomPtr = std::unique_ptr<GEOSGeometry, GeomDeleter>;
 
+// The geofence as a collection of WGS84 lat/lon points.
+struct GeofenceAsLatLonPoints {
+    std::vector<LatLon> launchPointFence;
+    std::vector<LatLon> ingressRouteFence;
+    std::vector<LatLon> regionOfInterestFence;
+    std::vector<LatLon> mergedFence;
+};
+
 // A mission geofence: the union of a 200 m buffer around the launch point, a
 // 100 m buffer around the ingress route, and a 250 m buffer around the ROI,
 // computed in a mission-centered AEQD projection. Built at construction.
@@ -50,12 +58,18 @@ class Geofence {
     GeomPtr makeBuffer(const GEOSGeometry* geometry, double distance, int segmentsPerQuadrant = 10);
     GeomPtr makeUnion(const GEOSGeometry* a, const GEOSGeometry* b);
 
+    std::vector<LatLon> ringToLatLon(const GEOSGeometry* ring);
+    std::vector<LatLon> polygonToLatLon(const GEOSGeometry* poly);
+
     public:
 
     explicit Geofence(const MissionData& mission);
 
     // True if the given WGS84 point lies inside the geofence.
     bool contains(const LatLon& point);
+
+    // Outputs the generated geofence as a collection of WGS84 lat / lon points.
+    GeofenceAsLatLonPoints asLatLonPoints();
 };
 
 }  // namespace penguin_fence
