@@ -8,6 +8,7 @@
 #include <geos_c.h> // The GEOS library.
 
 #include "mission.hpp"
+#include "projection.hpp"
 #include "types.hpp"
 
 namespace penguin_fence {
@@ -26,27 +27,35 @@ struct GeomDeleter {
 using GeosContextPtr = std::unique_ptr<std::remove_pointer_t<GEOSContextHandle_t>, GeosContextDeleter>;
 using GeomPtr = std::unique_ptr<GEOSGeometry, GeomDeleter>;
 
+// A mission geofence: the union of a 200 m buffer around the launch point, a
+// 100 m buffer around the ingress route, and a 250 m buffer around the ROI,
+// computed in a mission-centered AEQD projection. Built at construction.
 class Geofence {
-    // ctx is declared first so it outlives the geometries below: they are freed
-    // through the ctx handle, so the context must still be alive when they destruct.
+    // ctx is declared first so it outlives the GEOS geometries below: they are
+    // freed through the ctx handle, so the context must still be alive when they
+    // destruct. (proj is PROJ-only and independent of the GEOS context.)
     GeosContextPtr ctx;
     std::string errorMsg;
+    Projection proj;
 
-    // The three component buffers, populated by Generate().
+    // The three component buffers and their union, all in projected meters.
     GeomPtr launchBuffer;
     GeomPtr ingressBuffer;
     GeomPtr roiBuffer;
+    GeomPtr fence;
 
     GeomPtr makePoint(const Point2D& pt);
     GeomPtr makeLineString(const std::vector<Point2D>& pts);
     GeomPtr makePolygon(const std::vector<Point2D>& pts);
     GeomPtr makeBuffer(const GEOSGeometry* geometry, double distance, int segmentsPerQuadrant = 10);
+    GeomPtr makeUnion(const GEOSGeometry* a, const GEOSGeometry* b);
 
     public:
 
-    explicit Geofence();
+    explicit Geofence(const MissionData& mission);
 
-    void Generate(const MissionData& mission);
+    // True if the given WGS84 point lies inside the geofence.
+    bool contains(const LatLon& point);
 };
 
 }  // namespace penguin_fence

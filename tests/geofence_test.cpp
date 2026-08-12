@@ -4,10 +4,12 @@
 
 #include "penguin_fence/geofence.hpp"
 #include "penguin_fence/mission.hpp"
+#include "penguin_fence/types.hpp"
 
 namespace {
 
 using penguin_fence::Geofence;
+using penguin_fence::LatLon;
 using penguin_fence::MissionData;
 
 MissionData specMission() {
@@ -24,12 +26,22 @@ MissionData specMission() {
 
 }  // namespace
 
-// Smoke test: building all three buffers for the spec mission must not throw.
-// The real value is under the sanitizer gate -- it exercises the whole GEOS
-// ownership dance (coordseq -> geometry -> buffer, all freed) and ASan/LSan
-// proves nothing leaks or double-frees. (The boundary spot-check test with
-// assertions on the buffers comes next, once the geofence exposes a result.)
-TEST(Geofence, GeneratesSpecMissionWithoutThrowing) {
-    Geofence geofence;
-    EXPECT_NO_THROW(geofence.Generate(specMission()));
+// Construction builds all three buffers + the union. Leak/ownership behavior is
+// validated by the ASan/UBSan/LeakSan gate.
+TEST(Geofence, ConstructsSpecMissionWithoutThrowing) {
+    EXPECT_NO_THROW(Geofence{ specMission() });
+}
+
+// The union of the three buffers contains every mission vertex (each sits inside
+// its own component buffer) and excludes points far outside the ~2 km mission.
+TEST(Geofence, ContainsMissionVerticesAndExcludesFarPoints) {
+    const MissionData mission = specMission();
+    Geofence fence{ mission };
+
+    EXPECT_TRUE(fence.contains(mission.launchPoint));
+    for (const LatLon& p : mission.ingressRoute) EXPECT_TRUE(fence.contains(p));
+    for (const LatLon& p : mission.regionOfInterest) EXPECT_TRUE(fence.contains(p));
+
+    EXPECT_FALSE(fence.contains(LatLon{.lat = -88.0, .lon = 0.0}));   // ~110 km from the cluster
+    EXPECT_FALSE(fence.contains(LatLon{.lat = 0.0, .lon = 0.0}));     // the equator
 }

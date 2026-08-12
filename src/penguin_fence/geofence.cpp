@@ -32,8 +32,9 @@ static std::vector<Point2D> project(Projection& proj, const std::vector<LatLon>&
     return result;
 }
 
-Geofence::Geofence()
-  : ctx{ GEOS_init_r() } {
+Geofence::Geofence(const MissionData& mission)
+  : ctx{ GEOS_init_r() }
+  , proj{ calculateCentroid(mission) } {
 
     if (!ctx) {
         throw std::runtime_error("GEOS_init_r() failed");
@@ -41,6 +42,20 @@ Geofence::Geofence()
 
     // GEOS reports errors through a callback rather than an errno.
     GEOSContext_setErrorMessageHandler_r(ctx.get(), onGeosError, &errorMsg);
+
+    // Build each mission geometry in local meters, then buffer it by its standoff.
+    GeomPtr launchGeom = makePoint(proj.latLonToEastingNorthing(mission.launchPoint));
+    launchBuffer = makeBuffer(launchGeom.get(), LAUNCH_POINT_BUFFER);
+
+    GeomPtr routeGeom = makeLineString(project(proj, mission.ingressRoute));
+    ingressBuffer = makeBuffer(routeGeom.get(), INGRESS_ROUTE_BUFFER);
+
+    GeomPtr roiGeom = makePolygon(project(proj, mission.regionOfInterest));
+    roiBuffer = makeBuffer(roiGeom.get(), REGION_OF_INTEREST_BUFFER);
+
+    // Union the three component buffers into the geofence.
+    GeomPtr partial = makeUnion(launchBuffer.get(), ingressBuffer.get());
+    fence = makeUnion(partial.get(), roiBuffer.get());
 }
 
 GeomPtr Geofence::makePoint(const Point2D& pt) {
@@ -89,20 +104,19 @@ GeomPtr Geofence::makeBuffer(const GEOSGeometry* geometry, double distance, int 
     return GeomPtr{ buffered, GeomDeleter{ ctx.get() } };
 }
 
-void Geofence::Generate(const MissionData& mission) {
-    // Centroid -> mission-centered local projection.
-    LatLon centroid = calculateCentroid(mission);
-    Projection proj{ centroid };
+GeomPtr Geofence::makeUnion(const GEOSGeometry* a, const GEOSGeometry* b) {
+    // GEOSUnion_r returns a NEW geometry; it does not consume its inputs, so the
+    // component buffers stay owned by their members.
+    GEOSGeometry* united = GEOSUnion_r(ctx.get(), a, b);
+    if (!united) throw std::runtime_error("union failed: " + errorMsg);
+    return GeomPtr{ united, GeomDeleter{ ctx.get() } };
+}
 
-    // Build each mission geometry in local meters, then buffer it by its standoff.
-    GeomPtr launchGeom = makePoint(proj.latLonToEastingNorthing(mission.launchPoint));
-    launchBuffer = makeBuffer(launchGeom.get(), LAUNCH_POINT_BUFFER);
-
-    GeomPtr routeGeom = makeLineString(project(proj, mission.ingressRoute));
-    ingressBuffer = makeBuffer(routeGeom.get(), INGRESS_ROUTE_BUFFER);
-
-    GeomPtr roiGeom = makePolygon(project(proj, mission.regionOfInterest));
-    roiBuffer = makeBuffer(roiGeom.get(), REGION_OF_INTEREST_BUFFER);
+bool Geofence::contains(const LatLon& point) {
+    GeomPtr queryPoint = makePoint(proj.latLonToEastingNorthing(point));
+    char result = GEOSContains_r(ctx.get(), fence.get(), queryPoint.get());  // 1 yes, 0 no, 2 exception
+    if (result == 2) throw std::runtime_error("GEOSContains failed: " + errorMsg);
+    return result == 1;
 }
 
 }  // namespace penguin_fence
