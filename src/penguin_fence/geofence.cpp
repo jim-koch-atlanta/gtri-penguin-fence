@@ -15,6 +15,11 @@ static const double LAUNCH_POINT_BUFFER = 200.0;
 static const double INGRESS_ROUTE_BUFFER = 100.0;
 static const double REGION_OF_INTEREST_BUFFER = 250.0;
 
+// Max edge length (meters) when densifying before inverse-projection. A long
+// projected edge becomes a wild lon/lat chord near the pole; short edges keep
+// the inverse-projected ring hugging the true boundary.
+static const double DENSIFY_MAX_EDGE = 10.0;
+
 namespace penguin_fence {
 
 // GEOSMessageHandler_r: void(const char* message, void* userdata)
@@ -112,6 +117,13 @@ GeomPtr Geofence::makeUnion(const GEOSGeometry* a, const GEOSGeometry* b) {
     return GeomPtr{ united, GeomDeleter{ ctx.get() } };
 }
 
+GeomPtr Geofence::densify(const GEOSGeometry* geometry, double maxEdge) {
+    // GEOSDensify_r inserts vertices so no edge exceeds maxEdge; returns a new geom.
+    GEOSGeometry* dense = GEOSDensify_r(ctx.get(), geometry, maxEdge);
+    if (!dense) throw std::runtime_error("densify failed: " + errorMsg);
+    return GeomPtr{ dense, GeomDeleter{ ctx.get() } };
+}
+
 bool Geofence::contains(const LatLon& point) {
     GeomPtr queryPoint = makePoint(proj.latLonToEastingNorthing(point));
     char result = GEOSContains_r(ctx.get(), fence.get(), queryPoint.get());  // 1 yes, 0 no, 2 exception
@@ -142,7 +154,11 @@ std::vector<LatLon> Geofence::polygonToLatLon(const GEOSGeometry* poly) {
         throw std::runtime_error("Conversion to WGS84 points currently only supports a single polygon with no holes.");
     }
 
-    const GEOSGeometry* shell = GEOSGetExteriorRing_r(ctx.get(), poly);
+    // Densify in the projected (meters) frame first: a long edge here maps to a
+    // lon/lat chord that swings across a huge area near the pole. Short edges keep
+    // the inverse-projected ring faithful to the true boundary.
+    GeomPtr dense = densify(poly, DENSIFY_MAX_EDGE);
+    const GEOSGeometry* shell = GEOSGetExteriorRing_r(ctx.get(), dense.get());
     return ringToLatLon(shell);
 }
 

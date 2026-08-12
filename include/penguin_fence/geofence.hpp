@@ -57,6 +57,7 @@ class Geofence {
     GeomPtr makePolygon(const std::vector<Point2D>& pts);
     GeomPtr makeBuffer(const GEOSGeometry* geometry, double distance, int segmentsPerQuadrant = 10);
     GeomPtr makeUnion(const GEOSGeometry* a, const GEOSGeometry* b);
+    GeomPtr densify(const GEOSGeometry* geometry, double maxEdge);
 
     std::vector<LatLon> ringToLatLon(const GEOSGeometry* ring);
     std::vector<LatLon> polygonToLatLon(const GEOSGeometry* poly);
