@@ -20,7 +20,8 @@ add_executable(penguin_fence_tests
     centroid_test.cpp
     projection_test.cpp
     geofence_test.cpp
-    geojson_test.cpp)
+    geojson_test.cpp
+    v2_probe_test.cpp)
 
 target_link_libraries(penguin_fence_tests
     PRIVATE

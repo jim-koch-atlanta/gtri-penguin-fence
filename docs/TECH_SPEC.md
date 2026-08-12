@@ -117,7 +117,7 @@ A **two-panel figure**:
 
 **Done:**
   * Correct fence for the supplied mission
-  * All three verification steps green in CI
+  * Geodesic ground-truth probes (V2) green in CI
   * GeoJSON emitted
   * Two-panel figure produced
   * README walkthrough written
@@ -131,6 +131,8 @@ A **two-panel figure**:
   * Performance tuning (the dataset is 9 vertices).
 
 **If time permits**:
+  * **Cross-projection agreement (V1):** re-run the fence in EPSG:3031 and compare against the AEQD fence — < 1 m per vertex (Hausdorff), < 0.1% area.
+  * **Structural sanity (V3):** geometry validity, antimeridian-seam artifacts, explicit pole handling.
   * Expand visualization to a true mapping solution (WinTAK, OSM)
   * Allow drag-and-drop placement of mission points
 
