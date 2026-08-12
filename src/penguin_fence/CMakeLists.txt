@@ -20,6 +20,7 @@ FetchContent_MakeAvailable(nlohmann_json)
 add_library(penguin_fence
     centroid.cpp
     geofence.cpp
+    geojson.cpp
     parser.cpp
     projection.cpp
     version.cpp)

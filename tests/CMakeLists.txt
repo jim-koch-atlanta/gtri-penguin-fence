@@ -19,13 +19,15 @@ add_executable(penguin_fence_tests
     parser_test.cpp
     centroid_test.cpp
     projection_test.cpp
-    geofence_test.cpp)
+    geofence_test.cpp
+    geojson_test.cpp)
 
 target_link_libraries(penguin_fence_tests
     PRIVATE
         penguin_fence
         penguin_fence_warnings
-        GTest::gtest_main)
+        GTest::gtest_main
+        nlohmann_json::nlohmann_json)
 
 include(GoogleTest)
 gtest_discover_tests(penguin_fence_tests)
