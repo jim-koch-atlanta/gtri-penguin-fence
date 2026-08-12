@@ -13,6 +13,11 @@ Requires `libproj-dev`, `libgeos-dev`, and `libgdal-dev`:
 sudo apt-get update && sudo apt-get install -y libproj-dev libgeos-dev libgdal-dev
 ```
 
+Requires for the viz layer:
+```bash
+sudo apt-get update && sudo apt-get install -y python3-pyproj python3-matplotlib
+```
+
 To build:
 
 ```bash
@@ -30,7 +35,7 @@ ctest --test-dir build --output-on-failure
 | src/penguin_fence/     | library implementation                      |
 | src/main.cpp           | thin application entry point                |
 | tests/                 | GoogleTest suite                            |
-| viz/                   | visualization scripts (Python later)        |
+| viz/                   | two-panel figure script (matplotlib)        |
 | .github/workflows/     | build + test on every push                  |
 
 ## Input Format
@@ -65,6 +70,30 @@ Each coordinate is a string of four space-separated tokens:
 - Latitude takes `N`/`S`; longitude takes `E`/`W` (case-insensitive).
 - Ranges: latitude 0–90, longitude 0–180 — the hemisphere letter carries the sign.
 - `regionOfInterest` is a **closed ring**: the last vertex repeats the first (as in the example above).
+
+## Visualization
+
+`viz/plot_mission.py` renders a two-panel figure to `docs/figure.png` from the
+emitted GeoJSON — this is the answer to *why the problem is set at the pole*.
+
+![Mission geofence figure](docs/figure.png)
+
+- **Panel A — the solution.** Every geometry re-projected into the mission's
+  local AEQD meters frame (rebuilt with `pyproj` from the `aeqd_center` the
+  pipeline emits as a top-level GeoJSON property): the three component buffers,
+  the union geofence, the input launch/route/ROI, and the South Pole marker. The
+  fence shows as the ~2.3 km shape it actually is — and the pole sits *outside*
+  it, ~570 m off the ingress route.
+- **Panel B — the lesson.** The *same* GeoJSON plotted naively as raw lon/lat,
+  where that 2.3 km fence smears across ~230° of longitude. That's why the
+  geometry is done in a projected frame, never in lat/lon, near the pole.
+
+Regenerate (Debian/Ubuntu; see `viz/README.md` for a portable pip/venv setup):
+
+```bash
+sudo apt-get install -y python3-pyproj python3-matplotlib   # once
+python3 viz/plot_mission.py                                 # -> docs/figure.png
+```
 
 ## Design Decisions
 

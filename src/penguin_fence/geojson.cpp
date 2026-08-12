@@ -2,6 +2,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "penguin_fence/centroid.hpp"
 #include "penguin_fence/geofence.hpp"
 #include "penguin_fence/mission.hpp"
 #include "penguin_fence/types.hpp"
@@ -44,6 +45,11 @@ std::string toGeoJson(const MissionData& inputs, const GeofenceAsLatLonPoints& f
     json resultObj = json::object();
     resultObj["type"] = "FeatureCollection";
 
+    // Emit the AEQD projection center (the mission's spherical centroid) so the
+    // visualization can rebuild the identical local frame with pyproj.
+    const LatLon center = calculateCentroid(inputs);
+    resultObj["aeqd_center"] = { {"lat", center.lat}, {"lon", center.lon} };
+
     json featuresObj = json::array();
     featuresObj.push_back(pointToGeoJson(inputs.launchPoint, "launch_point", "input"));
     featuresObj.push_back(polygonToGeoJson(inputs.ingressRoute, "ingress_route", "input", "LineString"));
@@ -51,7 +57,7 @@ std::string toGeoJson(const MissionData& inputs, const GeofenceAsLatLonPoints& f
 
     featuresObj.push_back(polygonToGeoJson(fence.launchPointFence, "fence_launch_point", "fence"));
     featuresObj.push_back(polygonToGeoJson(fence.ingressRouteFence, "fence_ingress_route", "fence"));
-    featuresObj.push_back(polygonToGeoJson(fence.regionOfInterestFence, "fence_region_of_interest", "input"));
+    featuresObj.push_back(polygonToGeoJson(fence.regionOfInterestFence, "fence_region_of_interest", "fence"));
 
     featuresObj.push_back(polygonToGeoJson(fence.mergedFence, "fence", "fence"));
 
