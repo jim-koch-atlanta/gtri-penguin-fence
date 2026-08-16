@@ -64,7 +64,7 @@ flowchart TD
     F --> G[PROJ: inverse transform\nto WGS84]
     G --> H[GeoJSON out]
     H --> I[Visualization layer\ntwo-panel figure]
-    F -.verification.-> V1[Re-run in EPSG:3031\ncompare fences\n(deferred)]
+    F -.verification.-> V1["Re-run in EPSG:3031<br/>compare fences<br/>(deferred)"]
     F -.verification.-> V2[Geodesic ground-truth\ndistance probes]
 ```
 
