@@ -1,35 +1,18 @@
 #include <cstdio>
+#include <fstream>
 #include <iostream>
 #include <string_view>
 
 #include "penguin_fence/centroid.hpp"
+#include "penguin_fence/geofence.hpp"
+#include "penguin_fence/geojson.hpp"
 #include "penguin_fence/parser.hpp"
 #include "penguin_fence/projection.hpp"
 #include "penguin_fence/version.hpp"
 
 using namespace penguin_fence;
 
-void testGeosIntegration() {
-    constexpr std::string_view missionJson = R"({
-    "launchPoint": "89.987080 S 90.540186 W",
-    "ingressRoute": [
-        "89.987080 S 90.540186 W",
-        "89.992746 S 21.201396 W",
-        "89.987957 S 88.611099 E"
-    ],
-    "regionOfInterest": [
-        "89.980833 S 107.826869 E",
-        "89.981868 S 69.423914 E",
-        "89.992081 S 57.647665 E",
-        "89.990410 S 120.581590 E",
-        "89.980833 S 107.826869 E"
-    ]
-    })";
-
-    auto r = parseMission(missionJson);
-    if (!r.ok()) { std::printf("parse failed: %s\n", r.error().c_str()); return; }
-    const MissionData& m = r.value();
-
+void testGeosIntegration(const MissionData& m) {
     LatLon c = calculateCentroid(m);
     Projection proj(c);
     std::printf("centroid: lat=%.6f lon=%.6f\n\n", c.lat, c.lon);
@@ -44,7 +27,42 @@ void testGeosIntegration() {
     for (auto& p : m.regionOfInterest) show("roi", p);
 }
 
-int main() {
-    testGeosIntegration();
+int main(int argc, char** argv) {
+    if (argc < 3) {
+        std::fprintf(stderr, "Usage: %s <input_json_path> <output_geojson_path>\n", argv[0]);
+        return 1;
+    }
+    
+    const std::string inPath = argv[1];
+    const std::string outPath = argv[2];
+    std::cout << "Input file path:  " << inPath << "\n";
+    std::cout << "Output file path: " << outPath << "\n\n";
+
+    auto parsed = parseMissionFile(inPath);   // ParseResult — check .ok()/.error()
+    if (!parsed.ok()) {
+        std::fprintf(stderr, "Error parsing mission file: %s\n", parsed.error().c_str());
+        return 1;
+    }
+
+    const MissionData& m = parsed.value();
+    testGeosIntegration(m);
+    
+    std::string geojson;
+    try {
+        Geofence fence{ m };                                 // builds the whole pipeline
+        geojson = toGeoJson(m, fence.asLatLonPoints());
+    }
+    catch (const std::exception& e) {
+        std::fprintf(stderr, "geofence failed: %s\n", e.what());
+        return 1;
+    }
+
+    std::ofstream file(outPath);
+    if (!file) {
+        std::fprintf(stderr, "cannot open %s\n", outPath.c_str()); return 1;
+    }
+    file << geojson;
+    std::cout << "Successfully wrote output to " << outPath << "\n";
+    
     return 0;
 }

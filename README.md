@@ -26,6 +26,21 @@ cmake --build build -j
 ctest --test-dir build --output-on-failure
 ```
 
+## Run
+
+```bash
+./build/src/penguin_fence_app <input.json> <output.geojson>
+```
+
+Reads a mission (see [Input Format](#input-format)) and writes the geofence as a
+GeoJSON `FeatureCollection`. The checked-in **[docs/mission.geojson](docs/mission.geojson)**
+is this tool's output for the supplied mission — committed so the result can be
+inspected without building. Regenerate with:
+
+```bash
+./build/src/penguin_fence_app data/input.json docs/mission.geojson
+```
+
 ## Layout
 
 | Path                   | Description                                 |
