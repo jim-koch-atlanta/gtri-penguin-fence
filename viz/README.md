@@ -26,5 +26,5 @@ python3 -m venv viz/.venv && viz/.venv/bin/pip install -r viz/requirements.txt
 python3 viz/plot_mission.py [mission.geojson] [figure.png]
 ```
 
-Defaults: reads `build/mission.geojson`, writes `docs/figure.png`. The input
+Defaults: reads `docs/mission.geojson`, writes `docs/figure.png`. The input
 GeoJSON must carry the top-level `aeqd_center` property (the projection center).

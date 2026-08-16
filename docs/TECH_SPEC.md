@@ -64,7 +64,7 @@ flowchart TD
     F --> G[PROJ: inverse transform\nto WGS84]
     G --> H[GeoJSON out]
     H --> I[Visualization layer\ntwo-panel figure]
-    F -.verification.-> V1[Re-run in EPSG:3031\ncompare fences]
+    F -.verification.-> V1[Re-run in EPSG:3031\ncompare fences\n(deferred)]
     F -.verification.-> V2[Geodesic ground-truth\ndistance probes]
 ```
 
@@ -86,26 +86,17 @@ flowchart TD
 
 ## 7. Verification Plan
 
-From my past experience, any verification must confirm the riskiest assumption. In this case, we need to verify **correctness at the poles** (89.99°S).
+Any verification must confirm the riskiest assumption. Here that is **correctness at the pole** (89.99°S), where treating lat/lon as Cartesian fails. I specified three independent checks; below is what was **delivered** and what was **consciously cut** for the take-home window.
 
-This will be accomplished in three separate ways:
+**1. Geodesic ground truth — DELIVERED (green in CI).** Points placed at known geodesic distances on the WGS84 ellipsoid (PROJ's geodesic routines), *independent of the AEQD projection*, then tested for containment in projected space. Per-component semantics: 199 m from the launch is inside / 201 m outside the 200 m launch buffer; 99/101 m for the route's 100 m buffer; 249/251 m for the ROI's 250 m buffer — each inside-probe asserted inside the union fence, each outside-probe aimed clear of the other components. Plus one **distant probe** (5 km out), outside all three buffers, asserted outside the union — the far-field check on the union itself. (`tests/v2_probe_test.cpp`, 4 cases.)
 
-1. **Cross-projection agreement.** Run the same solution with the dynamic Azimuthal Equidistant *and* EPSG:3031. These are two entirely different projection families -- equidistant vs conformal stereographic. Because they distort differently, agreement would be meaningful.
+**2. Structural sanity — DELIVERED as-landed.** The pole mission constructs without throwing; components and the union emit **closed rings at the pole**; output is a **valid GeoJSON FeatureCollection** in [lon, lat] order; the launch buffer measures 200 m back; projection round-trips and the unit-vector centroid hold at 89.99°S and across the antimeridian. Exercised across the geofence / geojson / projection / centroid suites — all on the pole mission, so "the pole is handled" is verified pervasively rather than by one assertion.
 
-We will verify that the two fences agree within a specific tolerance. Target: < 1m difference per vertex; < 0.1% difference in area.
+**3. Cross-projection agreement (V1) — SPECIFIED, DELIBERATELY CUT.** Re-run the mission through EPSG:3031 (Antarctic Polar Stereographic) and compare the two fences — equidistant vs. conformal-stereographic, different projection families. Target: **< 1 m Hausdorff distance** between boundaries (refined from the original "per-vertex" — after densification and two projections the fences share no vertex correspondence, so Hausdorff is the well-defined metric), < 0.1% area. What it adds: V2 proves the fence correct against a projection-independent oracle, but V1 checks the *projection choice itself* — it guards against a shared systematic error that a single projection family could hide. A time judgment, not an oversight.
 
-2. **Geodesic ground truth.** Validate points at known geodesic distances computed by PROJ's geodesic routines, *independent of any projection*: a point 99 m from the ingress route lies **inside** the fence; 101 m lies **outside** the ingress route's buffer; likewise 199/201 m for the launch buffer and 249/251 m for the ROI; one distant point verified outside all three buffers, asserted outside the fence.
+**4. Antimeridian-seam & explicit validity assertions (V3) — SPECIFIED, DELIBERATELY CUT.** Dedicated assertions that the antimeridian-spanning route buffers without a seam and that `GEOSisValid` holds on the union. What they add: today the seam and validity are exercised *incidentally* by the pole mission (which does span ±180° and does yield a clean rendered fence); dedicated assertions would pin them against regression. Cut for time.
 
-3. **Structural sanity.**
-* The mission's antimeridian-spanning segments buffer without seam artifacts.
-* The fence is a valid geometry.
-* The pole itself is handled.
-
-**Unit tests:**
-* Unit-vector centroid (incl. the ±180° case: averaging 179°E and 179°W must NOT yield ~0°)
-* Hemisphere-suffix parsing
-* Axis-order round-trip through every I/O boundary
-* Buffer distance spot-checks
+**Unit tests (delivered):** unit-vector centroid incl. the ±180° case (179°E + 179°W ≠ ~0°) and the pole cluster · hemisphere-suffix parsing (+ range/NaN/Inf rejection) · axis-order round-trip through the projection and the GeoJSON boundary · buffer-distance spot-check (launch = 200 m).
 
 ## 8. Visualization Plan
 
@@ -139,5 +130,5 @@ A **two-panel figure**:
 ## 10. Open Questions / Flagged for the Committee
 
 1. **"A geofence" — union vs. three zones.** Decided: union as the deliverable, components rendered. Happy to discuss whether operational consumers want per-zone semantics (e.g., differing altitude floors per zone).
-2. **Buffer semantics.** Buffers computed in local projected meters; over this extent, projected-vs-geodesic disagreement is far below tolerance (verified by V1/V2). At larger extents the distinction becomes real — noted, out of scope.
+2. **Buffer semantics.** Buffers computed in local projected meters; over this extent, projected-vs-geodesic disagreement is far below tolerance (verified by V2). At larger extents the distinction becomes real — noted, out of scope.
 3. **Geofence consumers.** Output is GeoJSON/WGS84; if the fleet expects a specific format (e.g., MAVLink fence protocol items), that's a thin exporter away — flagging rather than guessing.

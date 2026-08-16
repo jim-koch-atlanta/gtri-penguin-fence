@@ -9,7 +9,7 @@ Panel B -- "the lesson": the SAME GeoJSON plotted as raw lon/lat, which smears a
 2.3 km fence across the whole longitude axis. That is why you cannot do geometry
 in lat/lon near the pole.
 
-Reads a mission GeoJSON (default build/mission.geojson) whose top-level
+Reads a mission GeoJSON (default docs/mission.geojson) whose top-level
 `aeqd_center` gives the projection center, and writes docs/figure.png.
 
     python viz/plot_mission.py [mission.geojson] [figure.png]
@@ -22,7 +22,7 @@ matplotlib.use("Agg")              # headless: write a PNG, no display needed
 import matplotlib.pyplot as plt
 from pyproj import Transformer
 
-IN_PATH = sys.argv[1] if len(sys.argv) > 1 else "build/mission.geojson"
+IN_PATH = sys.argv[1] if len(sys.argv) > 1 else "docs/mission.geojson"
 OUT_PATH = sys.argv[2] if len(sys.argv) > 2 else "docs/figure.png"
 
 doc = json.load(open(IN_PATH))
@@ -83,7 +83,7 @@ axA.plot(lx, ly, marker="*", color="black", ms=15, ls="none", label="launch")
 
 # The South Pole (longitude is arbitrary there).
 spx, spy = to_m.transform(0.0, -90.0)
-axA.plot(spx, spy, marker="x", color="crimson", ms=12, mew=2.5, ls="none")
+axA.plot(spx, spy, marker="x", color="crimson", ms=12, mew=2.5, ls="none", label="South Pole")
 axA.annotate("South Pole", (spx, spy), textcoords="offset points",
              xytext=(8, -4), color="crimson", fontsize=9)
 
@@ -104,7 +104,7 @@ axB.plot(lons, lats, color="black", lw=1.0)
 axB.set_xlim(-180, 180)
 axB.set_xlabel("longitude (deg)")
 axB.set_ylabel("latitude (deg)")
-axB.set_title("Same data as raw lat/lon — why naive geometry fails at the pole")
+axB.set_title("Same data as raw lat/lon — plausible, and completely wrong")
 axB.grid(True, ls=":", alpha=0.6)
 
 fig.tight_layout()
