@@ -1,11 +1,13 @@
 # Project Notes
 
-## Status (end of 2026-08-12 session)
+## Status (end of 2026-08-16 session)
 
-Pipeline **complete end-to-end**: parse → centroid → AEQD → buffers → union →
-inverse-project (densified) → GeoJSON, plus a `contains` predicate, the two-panel
-figure, and the V2 geodesic ground-truth probes. **53/53 ctest, `-Wall -Wextra`
-clean, ASan+UBSan+LeakSan clean.** CI green on every push.
+Q1 **feature-complete and documented**: the full pipeline (parse → centroid → AEQD →
+buffers → union → inverse-project/densified → GeoJSON) behind an app front door
+(`main.cpp` emits a FeatureCollection to file), a `contains` predicate, the polished
+two-panel figure, the V2 geodesic ground-truth probes, a McMurdo demo mission, and a
+finalized README + TECH_SPEC. **53/53 ctest, `-Wall -Wextra` clean,
+ASan+UBSan+LeakSan clean.** CI green on every push.
 
 ## Done (green)
 
@@ -27,25 +29,33 @@ clean, ASan+UBSan+LeakSan clean.** CI green on every push.
   `GEOSGeometry*` out of the public API (resolves the old output-shape TODO).
 - **GeoJSON emit** — `toGeoJson`: 7 features (launch / route / ROI inputs + 3
   component buffers + union fence) plus a top-level `aeqd_center` for the viz.
-- **Two-panel figure** — `viz/plot_mission.py` → `docs/figure.png`. Panel A = local
-  AEQD solution, Panel B = raw lon/lat lesson; `pyproj` rebuilds the AEQD from the
-  emitted `aeqd_center`. README + `viz/README.md` walkthroughs written.
+- **Two-panel figure (polished)** — `viz/plot_mission.py` → `docs/figure.png`. Panel A
+  = local AEQD solution, Panel B = raw lon/lat lesson; `pyproj` rebuilds the AEQD from
+  the emitted `aeqd_center`. Polish: Panel B title, South Pole in the legend + on-plot,
+  default input repointed to committed `docs/mission.geojson`.
 - **V2 geodesic probes** — `tests/v2_probe_test.cpp`. `TEST_F` fixture, WGS84
   `geod_init`, ground truth via `geod_direct`/`geod_inverse` (point + polyline/ring
   helpers). Four probes — launch 199/201, route 99/101, ROI 249/251, distant 5 km —
   each geodesic-placed, ground-truthed, then asserted in **projected-space**
   containment.
+- **App front door** — `main.cpp` parses `<input.json>` → builds the geofence → emits
+  the FeatureCollection to `<output.geojson>` (both args required; the pipeline is
+  wrapped so a GEOS failure exits cleanly). Committed `docs/mission.geojson` as an
+  inspectable artifact.
+- **McMurdo demo** — same binary at 77.85°S: `data/mcmurdo.json` → `docs/mcmurdo.geojson`,
+  identical schema, renders in Web Mercator (feeds the Q2 React client's mission layer).
+  The generality claim, cashed.
+- **Docs finalized** — README redrafted (hook → figure → verification → McMurdo → tour)
+  and TECH_SPEC §7 trued to delivered reality (V2 + structural DELIVERED; V1/V3
+  SPECIFIED-but-cut), with the Hausdorff metric refinement. One open item: the
+  geojson.io clamp screenshot (placeholder in the README hook, being captured).
 
-## Deferred → Friday 2026-08-14 (tagged in TECH_SPEC §9 "If time permits")
+## Deferred (TECH_SPEC §9 "If time permits")
 
 - **V1 cross-projection agreement** — re-run the fence in EPSG:3031 and compare to
-  the AEQD fence: < 1 m per vertex (Hausdorff), < 0.1% area.
+  the AEQD fence: < 1 m Hausdorff, < 0.1% area.
 - **V3 structural sanity** — geometry validity (`GEOSisValid`), antimeridian-seam
   artifacts, explicit pole handling — as their own assertions.
-- **Figure polish** — legend / label / pole-callout refinements on `docs/figure.png`.
-- **Wire `toGeoJson` into `main.cpp`** — the app still runs the old
-  `testGeosIntegration` meters-dump; main should parse a mission file → `toGeoJson`
-  → stdout/file.
 
 ## Design TODOs (flagged, not resolved)
 

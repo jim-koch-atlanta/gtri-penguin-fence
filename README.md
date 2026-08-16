@@ -32,8 +32,7 @@ The two-panel figure is the argument:
 A third view — the same *correct* GeoJSON opened in geojson.io — teaches two
 **separate** lessons at once:
 
-<!-- TODO(jim): capture geojson.io view of docs/mission.geojson -> docs/geojson_io_clamp.png, then embed it here -->
-> _[screenshot placeholder — geojson.io view of `docs/mission.geojson`]_
+![](docs/geojson.png)
 
 1. **Densification — mine to fix.** Before I densified the fence edges, a few long
    AEQD segments inverse-projected into wild lon/lat chords and the fence rendered
